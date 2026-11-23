@@ -1,4 +1,4 @@
-const CACHE = 'sburdle-v1';
+const CACHE = 'sburdle-v2';
 const CORE = [
   './', './index.html', './parole.js', './manifest.json',
   './sburdle-icon-192.png', './sburdle-icon-512.png',
@@ -28,13 +28,22 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   const ok = url.origin === location.origin || url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com');
   if (!ok) return;
-  e.respondWith(
-    fetch(req).then(res => {
+  e.respondWith((async () => {
+    try {
+      const res = await fetch(req);
       if (res && (res.ok || res.type === 'opaque')) {
         const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       }
       return res;
-    }).catch(() => caches.match(req).then(r => r || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))
-  );
+    } catch (err) {
+      const hit = await caches.match(req);
+      if (hit) return hit;
+      if (req.mode === 'navigate') {
+        const page = (await caches.match('./')) || (await caches.match('./index.html'));
+        if (page) return page;
+      }
+      return Response.error();
+    }
+  })());
 });
