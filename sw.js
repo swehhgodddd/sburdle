@@ -1,9 +1,9 @@
 const CACHE = 'sburdle-v1';
 const CORE = [
   './', './index.html', './parole.js', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png',
-  './icons/maskable-192.png', './icons/maskable-512.png',
-  './icons/apple-touch-icon.png', './icons/favicon-32.png'
+  './sburdle-icon-192.png', './sburdle-icon-512.png',
+  './sburdle-maskable-192.png', './sburdle-maskable-512.png',
+  './sburdle-apple-touch-icon.png', './sburdle-favicon-32.png'
 ];
 
 self.addEventListener('install', e => {
