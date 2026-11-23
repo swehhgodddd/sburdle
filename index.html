@@ -15,27 +15,28 @@
 <link rel="icon" type="image/png" href="sburdle-favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#fafafa; --panel:#ffffff; --ink:#0f0f10; --muted:#777b83;
-  --line:#e4e4e7; --tile-edge:#dcdce0;
+  --bg:#fafafa; --panel:#ffffff; --ink:#0f0f10; --muted:#6f737b;
+  --line:#e4e4e7; --tile-edge:#d6d8dc; --wire:#1a7fa8; --hud:#b84d0a; --on-hud:#ffffff; --grid:rgba(15,15,16,.06);
   --key:#eeeef0; --key-hover:#e4e4e7; --sw-off:#d4d4d8;
-  --correct:#2f9e6a; --present:#d4a72c; --present-ink:#1a1400;
-  --absent:#6f737b;
+  --correct:#2f9e6a; --correct-ink:#ffffff; --present:#d4a72c; --present-ink:#1a1400;
+  --absent:#6f737b; --absent-ink:#ffffff;
+  --mono:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --shadow:0 12px 32px rgba(15,15,16,.14);
 }
 :root[data-theme=dark]{
-  --bg:#0e0e10; --panel:#18181b; --ink:#f4f4f5; --muted:#8b8f98;
-  --line:#27272a; --tile-edge:#2e2e33;
-  --key:#26262a; --key-hover:#303036; --sw-off:#3a3a40;
-  --correct:#35a96c; --present:#d9ac2e; --present-ink:#1a1400;
-  --absent:#3a3a40;
-  --shadow:0 12px 32px rgba(0,0,0,.55);
+  --bg:#07080a; --panel:#0d0f12; --ink:#ece7dc; --muted:#8e8b84;
+  --line:#21262c; --tile-edge:#2b333b; --wire:#3fb6e8; --hud:#ff8a3d; --on-hud:#0a0a0a; --grid:rgba(63,182,232,.11);
+  --key:#171b20; --key-hover:#212730; --sw-off:#2b333b;
+  --correct:#43c59e; --correct-ink:#04140e; --present:#f5a524; --present-ink:#1a1000;
+  --absent:#262b32; --absent-ink:#b9b5ab;
+  --shadow:0 12px 32px rgba(0,0,0,.6);
 }
 :root[data-contrast=high]{
-  --correct:#ee7a2e;
+  --correct:#ee7a2e; --correct-ink:#140800;
   --present:#6db4ee; --present-ink:#06202f;
 }
 html,body{height:100%}
@@ -47,22 +48,26 @@ body{
   padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
   transition:background .3s;
 }
+body::before{content:"";position:fixed;left:-60%;right:-60%;bottom:0;height:85vh;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:48px 48px;transform:perspective(440px) rotateX(64deg);transform-origin:50% 100%;
+  -webkit-mask-image:linear-gradient(to top,#000 0%,transparent 80%);mask-image:linear-gradient(to top,#000 0%,transparent 80%)}
 [hidden]{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 /* intestazione */
 header{width:100%;max-width:520px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
-h1{font-weight:700;font-size:clamp(22px,6vw,26px);letter-spacing:-.03em;line-height:1}
+h1{font-family:var(--mono);font-weight:600;font-size:clamp(20px,5.6vw,24px);letter-spacing:-.02em;line-height:1}
 .ttl{text-align:center}
-.ttl small{display:block;margin-top:4px;font-size:12.5px;line-height:1;font-weight:500;color:var(--muted)}
+.ttl small{display:block;margin-top:5px;font-family:var(--mono);font-size:12px;line-height:1;font-weight:500;color:var(--hud)}
 .bar{display:flex;gap:2px}
 .bar.r{justify-content:flex-end}
 .ib{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;color:var(--ink);transition:background .15s}
 .ib:hover{background:var(--key)}
 .ib svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ib.pulse{animation:pulse 1.4s ease-in-out 3}
-@keyframes pulse{50%{background:var(--ink);color:var(--bg)}}
+@keyframes pulse{50%{background:var(--hud);color:var(--on-hud)}}
 
 main{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px 12px}
 
@@ -71,15 +76,15 @@ main{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-
   width:min(92vw,calc(var(--cols) * 64px + (var(--cols) - 1) * 6px),calc((100dvh - 300px) * var(--cols) / 6))}
 .row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:6px}
 .tile{
-  aspect-ratio:1;display:grid;place-items:center;border-radius:8px;
+  aspect-ratio:1;display:grid;place-items:center;border-radius:4px;
   background:transparent;border:1.5px solid var(--tile-edge);
-  font-weight:600;font-size:clamp(24px,8vw,32px);line-height:1;text-transform:uppercase;user-select:none;
+  font-family:var(--mono);font-weight:600;font-size:clamp(24px,8vw,32px);line-height:1;text-transform:uppercase;user-select:none;
 }
 @supports (width:1cqw){.cq .tile{font-size:calc(100cqw / var(--cols) * var(--k,.46))}}
-.tile.filled{border-color:var(--muted);animation:pop .12s ease-out}
-.tile.correct{background:var(--correct);border-color:var(--correct);color:#fff}
+.tile.filled{border-color:var(--wire);animation:pop .12s ease-out}
+.tile.correct{background:var(--correct);border-color:var(--correct);color:var(--correct-ink)}
 .tile.present{background:var(--present);border-color:var(--present);color:var(--present-ink)}
-.tile.absent{background:var(--absent);border-color:var(--absent);color:#fff}
+.tile.absent{background:var(--absent);border-color:var(--absent);color:var(--absent-ink)}
 .tile.flip{animation:flip .56s ease both;animation-delay:calc(var(--i) * .28s)}
 .tile.win{animation:bounce .85s ease both;animation-delay:calc(var(--i) * .09s)}
 .row.shake{animation:shake .45s}
@@ -93,16 +98,16 @@ main{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-
 .kr{display:flex;gap:5px;justify-content:center}
 .sp{flex:.5}
 .key{
-  flex:1;max-width:46px;height:54px;border-radius:8px;background:var(--key);color:var(--ink);
-  font-weight:600;font-size:clamp(14px,4vw,16px);text-transform:uppercase;
+  flex:1;max-width:46px;height:54px;border-radius:5px;background:var(--key);color:var(--ink);border:1px solid var(--line);
+  font-family:var(--mono);font-weight:600;font-size:clamp(14px,4vw,16px);text-transform:uppercase;
   touch-action:manipulation;transition:background .25s,transform .06s;
 }
 .key:hover{background:var(--key-hover)}
 .key:active{transform:scale(.95)}
 .key.wide{flex:1.55;max-width:70px;font-size:clamp(11px,3vw,13px)}
-.key.correct{background:var(--correct);color:#fff}
-.key.present{background:var(--present);color:var(--present-ink)}
-.key.absent{background:#d64545;color:#fff}
+.key.correct{background:var(--correct);border-color:var(--correct);color:var(--correct-ink)}
+.key.present{background:var(--present);border-color:var(--present);color:var(--present-ink)}
+.key.absent{background:#d64545;border-color:#d64545;color:#fff}
 .key svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 /* avvisi */
@@ -112,27 +117,27 @@ main{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-
 @keyframes in{from{opacity:0;transform:translateY(-6px)}}
 
 /* finestre */
-dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);padding:24px 22px 20px;width:min(92vw,400px);max-height:88dvh;overflow:auto;margin:auto;box-shadow:var(--shadow)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:24px 22px 20px;width:min(92vw,400px);max-height:88dvh;overflow:auto;margin:auto;box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(0,0,0,.45);backdrop-filter:blur(3px)}
 dialog[open]{animation:in .18s ease-out}
 dialog h2{font-size:20px;font-weight:700;margin-bottom:14px;letter-spacing:-.02em}
 dialog p{line-height:1.5;margin-bottom:10px;font-size:15px}
 .hint{color:var(--muted);font-size:14px}
 .btns{display:flex;gap:10px;margin-top:18px}
-.btn{flex:1;padding:12px 14px;border-radius:10px;font-weight:600;font-size:15px;background:var(--key);transition:transform .06s,background .15s}
+.btn{flex:1;padding:12px 14px;border-radius:6px;font-weight:600;font-size:15px;background:var(--key);border:1px solid var(--line);transition:transform .06s,background .15s}
 .btn:hover{background:var(--key-hover)}
 .btn:active{transform:scale(.97)}
-.btn.main{background:var(--ink);color:var(--bg)}
+.btn.main{background:var(--hud);border-color:var(--hud);color:var(--on-hud)}
 .btn.main:hover{opacity:.88}
 
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:18px}
-.stats b{display:block;font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
+.stats b{display:block;font-family:var(--mono);font-size:26px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
 .stats span{font-size:12.5px;color:var(--muted)}
 .dist{display:grid;grid-template-columns:14px 1fr;gap:5px 8px;align-items:center;font-weight:500;font-size:14px}
-.dist .b{background:var(--absent);color:#fff;border-radius:4px;padding:2px 8px;min-width:24px;text-align:right;font-size:13px}
-.dist .b.hl{background:var(--correct)}
-.reveal{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:var(--key);font-size:15px}
-.reveal b{font-size:18px;text-transform:uppercase;letter-spacing:.05em}
+.dist .b{background:var(--absent);color:var(--absent-ink);font-family:var(--mono);border-radius:3px;padding:2px 8px;min-width:24px;text-align:right;font-size:13px}
+.dist .b.hl{background:var(--correct);color:var(--correct-ink)}
+.reveal{margin:0 0 14px;padding:12px 14px;border-radius:6px;background:var(--key);font-size:15px}
+.reveal b{font-family:var(--mono);font-size:18px;text-transform:uppercase;letter-spacing:.05em}
 
 .opt{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}
 .opt:last-of-type{border-bottom:0}
@@ -142,8 +147,8 @@ dialog p{line-height:1.5;margin-bottom:10px;font-size:15px}
 .sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
 .sw i{position:absolute;inset:0;border-radius:26px;background:var(--sw-off);transition:background .2s}
 .sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s,background .2s}
-.sw input:checked+i{background:var(--ink)}
-.sw input:checked+i::after{transform:translateX(18px);background:var(--bg)}
+.sw input:checked+i{background:var(--hud)}
+.sw input:checked+i::after{transform:translateX(18px);background:var(--on-hud)}
 .sw input:focus-visible+i{outline:2px solid var(--ink);outline-offset:2px}
 
 /* menu delle modalità */
@@ -151,20 +156,20 @@ dialog p{line-height:1.5;margin-bottom:10px;font-size:15px}
 .mtop{display:flex;justify-content:flex-end;gap:2px}
 .hero{padding:18px 2px 32px}
 .logo{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:6px;max-width:calc(var(--cols) * 58px + (var(--cols) - 1) * 6px);container-type:inline-size;--k:.52}
-.logo .tile{background:var(--ink);border-color:var(--ink);color:var(--bg);animation:flip .5s ease both;animation-delay:calc(var(--i) * .08s)}
+.logo .tile{background:transparent;border-color:var(--wire);color:var(--hud);animation:flip .5s ease both;animation-delay:calc(var(--i) * .08s)}
 .modes{display:flex;flex-direction:column;gap:10px}
-.mode{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:18px;border-radius:14px;background:var(--panel);
+.mode{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:18px;border-radius:8px;background:var(--panel);
   border:1px solid var(--line);transition:transform .06s,border-color .15s}
-.mode:hover{border-color:var(--muted)}
+.mode:hover{border-color:var(--wire)}
 .mode:active{transform:scale(.99)}
-.ml strong{display:block;font-size:19px;font-weight:600;letter-spacing:-.02em}
+.ml strong{display:block;font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em}
 .ml span{display:block;margin-top:3px;font-size:14px;color:var(--muted)}
-.mfoot{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted)}
+.mfoot{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:13px;color:var(--muted)}
 .mfoot b{color:var(--ink);font-weight:600}
 @media (min-width:640px){#menu{max-width:720px}.modes{display:grid;grid-template-columns:1fr 1fr}}
 dialog .msub{margin:-8px 0 14px}
-.mode.live{border-color:var(--ink)}
-.badge{padding:2px 10px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:13px}
+.mode.live{border-color:var(--hud)}
+.badge{padding:2px 8px;border-radius:4px;background:var(--hud);color:var(--on-hud);font-weight:600;font-size:12.5px}
 
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 @media (max-height:640px){.key{height:44px}#board{width:min(92vw,calc(var(--cols) * 54px + (var(--cols) - 1) * 6px),calc((100dvh - 262px) * var(--cols) / 6))}}
@@ -237,7 +242,7 @@ dialog .msub{margin:-8px 0 14px}
     try { localStorage.removeItem('parola.' + k); } catch (e) {}
   });
 
-  let settings = Object.assign({ dark: null, high: false, free: true }, store.get('parola.settings', {}));
+  let settings = Object.assign({ dark: true, high: false, free: true }, store.get('parola.settings', {}));
   const loadStats = n => Object.assign({ played: 0, won: 0, streak: 0, max: 0, dist: [0, 0, 0, 0, 0, 0] }, store.get('parola.stats.' + n, {}));
   let stats = loadStats(COLS);
   let S = null, busy = false, gen = 0, screen = 'menu';
@@ -248,7 +253,7 @@ dialog .msub{margin:-8px 0 14px}
     const dark = settings.dark === null ? matchMedia('(prefers-color-scheme: dark)').matches : settings.dark;
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.dataset.contrast = settings.high ? 'high' : '';
-    document.querySelector('meta[name=theme-color]').content = dark ? '#0e0e10' : '#fafafa';
+    document.querySelector('meta[name=theme-color]').content = dark ? '#07080a' : '#fafafa';
     $('#oDark').checked = dark; $('#oHigh').checked = settings.high; $('#oFree').checked = settings.free;
   }
   $('#oDark').onchange = e => { settings.dark = e.target.checked; store.set('parola.settings', settings); applySettings(); };

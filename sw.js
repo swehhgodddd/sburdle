@@ -1,4 +1,4 @@
-const CACHE = 'sburdle-v2';
+const CACHE = 'sburdle-v3';
 const CORE = [
   './', './index.html', './parole.js', './manifest.json',
   './sburdle-icon-192.png', './sburdle-icon-512.png',
