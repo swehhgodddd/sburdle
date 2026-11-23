@@ -3,10 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Wordle</title>
-<meta name="description" content="Wordle in italiano. Indovina la parola di 4, 5, 6 o 7 lettere in 6 tentativi.">
+<title>Sburdle</title>
+<meta name="description" content="Sburdle, il Wordle in italiano. Indovina la parola di 4, 5, 6 o 7 lettere in 6 tentativi.">
 <meta name="theme-color" content="#fafafa">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='8' y='8' width='84' height='84' rx='18' fill='%230f0f10'/%3E%3Ctext x='50' y='70' font-size='60' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'%3EW%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sburdle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -172,8 +178,8 @@ dialog .msub{margin:-8px 0 14px}
     <button class="ib" id="mSet" aria-label="Impostazioni"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
   </div>
   <div class="hero">
-    <h1 class="logo cq" aria-label="Wordle" style="--cols:6">
-      <span class="tile" style="--i:0" aria-hidden="true">W</span><span class="tile" style="--i:1" aria-hidden="true">O</span><span class="tile" style="--i:2" aria-hidden="true">R</span><span class="tile" style="--i:3" aria-hidden="true">D</span><span class="tile" style="--i:4" aria-hidden="true">L</span><span class="tile" style="--i:5" aria-hidden="true">E</span>
+    <h1 class="logo cq" aria-label="Sburdle" style="--cols:7">
+      <span class="tile" style="--i:0" aria-hidden="true">S</span><span class="tile" style="--i:1" aria-hidden="true">B</span><span class="tile" style="--i:2" aria-hidden="true">U</span><span class="tile" style="--i:3" aria-hidden="true">R</span><span class="tile" style="--i:4" aria-hidden="true">D</span><span class="tile" style="--i:5" aria-hidden="true">L</span><span class="tile" style="--i:6" aria-hidden="true">E</span>
     </h1>
   </div>
   <div class="modes" id="modes"></div>
@@ -184,7 +190,7 @@ dialog .msub{margin:-8px 0 14px}
     <button class="ib" id="bHome" aria-label="Torna al menu"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg></button>
     <button class="ib" id="bStats" aria-label="Statistiche"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></button>
   </div>
-  <div class="ttl"><h1>Wordle</h1><small id="modeTag"></small></div>
+  <div class="ttl"><h1>Sburdle</h1><small id="modeTag"></small></div>
   <div class="bar r">
     <button class="ib" id="bNew" aria-label="Nuova parola"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
     <button class="ib" id="bSet" aria-label="Impostazioni"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
@@ -435,7 +441,7 @@ dialog .msub{margin:-8px 0 14px}
   function shareText() {
     const sym = { correct: settings.high ? '🟧' : '🟩', present: settings.high ? '🟦' : '🟨', absent: '⬛' };
     const lines = S.guesses.map(g => evaluate(g, S.answer).map(s => sym[s]).join(''));
-    return `Wordle ${COLS} lettere: ${S.won ? S.guesses.length : 'X'}/${ROWS}\n\n${lines.join('\n')}\n\n${location.href.split('#')[0]}`;
+    return `Sburdle ${COLS} lettere: ${S.won ? S.guesses.length : 'X'}/${ROWS}\n\n${lines.join('\n')}\n\n${location.href.split('#')[0]}`;
   }
   function openStats() {
     const pct = stats.played ? Math.round(stats.won / stats.played * 100) : 0;
@@ -490,6 +496,7 @@ dialog .msub{margin:-8px 0 14px}
   try { if (history.state && history.state.g) history.replaceState(null, ''); } catch (e) {}
   applySettings();
   showScreen('menu');
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 })();
 </script>
 </body>
