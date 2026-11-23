@@ -1,4 +1,5 @@
-// Parole che possono uscire come soluzione (5 lettere, senza accenti, minuscole).
+// Parole che possono uscire come soluzione (senza accenti, minuscole).
+// Possono avere lunghezze miste: in fondo al file vengono smistate per modalità (4, 5, 6, 7 lettere).
 // Aggiungine quante vuoi: più sono, meno ripetizioni vedrai.
 const PAROLE = [
 "abaco", "abate", "abete", "abile", "abito", "abuso", "acero", "aceto", "acido", "acino", "acqua", "acume",
@@ -29,7 +30,7 @@ const PAROLE = [
 "erede", "eremo", "eroe", "esatto", "esame", "esca", "esile", "esito", "esodo", "estro", "etere", "etica",
 "etico", "etnia", "fabbro", "faccia", "falce", "falco", "fallo", "falso", "fama", "fame", "fango", "fante",
 "farina", "faro", "farro", "farsa", "fascia", "fase", "fasto", "fata", "fatto", "fatuo", "fauna", "fava",
-"favo", "fede", "felce", "felpa", "femo", "feria", "ferita", "fermo", "ferro", "festa", "fetta", "fiaba",
+"favo", "fede", "felce", "felpa", "feria", "ferita", "fermo", "ferro", "festa", "fetta", "fiaba",
 "fianco", "fiato", "fibra", "fico", "fido", "fiele", "fieno", "fiera", "fiero", "figlio", "fila", "filo",
 "finta", "finto", "fiore", "firma", "fisco", "fisso", "fitta", "fitto", "fiume", "flauto", "flora", "flusso",
 "foca", "foce", "foglia", "foglio", "folla", "folle", "folto", "fondo", "fonte", "forca", "forma", "forno",
@@ -105,7 +106,7 @@ const PAROLE = [
 "voce", "voglia", "volo", "volpe", "volta", "volto", "volume", "voto", "vuoto", "zaino", "zampa", "zanna",
 "zebra", "zecca", "zenit", "zero", "zia", "zinco", "zio", "zitto", "zolfo", "zolla", "zona", "zoppo",
 "zucca", "zuffa", "zuppa",
-].filter(p => p.length === 5);
+];
 
 // Parole accettate come tentativo (plurali, verbi coniugati...) ma che non escono come soluzione.
 const EXTRA = [
@@ -206,4 +207,53 @@ const EXTRA = [
 "visti", "viva", "vive", "vivi", "vizii", "voglie", "volpi", "volta", "volte", "volti", "volto", "vuota",
 "vuote", "vuoti", "zaini", "zampe", "zanne", "zebre", "zecche", "zinchi", "zitta", "zitte", "zitti", "zolfi",
 "zolle", "zoppa", "zoppe", "zoppi", "zucche", "zuffe", "zuppe",
-].filter(p => p.length === 5);
+];
+
+// Altre soluzioni da 7 lettere (la lista sopra ne aveva poche).
+const PAROLE_7 = [
+"accordo", "acciaio", "adesivo", "albergo", "allarme", "altezza", "animale", "antenna",
+"appello", "armadio", "arrosto", "assalto", "autunno", "balcone", "bambino", "bastone",
+"battito", "benzina", "bisogno", "bottone", "braccio", "brivido", "bussola", "caldaia",
+"calzone", "camicia", "campana", "candela", "cantina", "capello", "carbone", "carezza",
+"cartone", "cascata", "cavallo", "cintura", "cipolla", "circolo", "cognome", "colonna",
+"compito", "coperta", "corallo", "cordone", "cornice", "cortile", "cuscino", "deserto",
+"destino", "dottore", "energia", "entrata", "esempio", "fagiolo", "fattore", "fermata",
+"fiducia", "fiorino", "fontana", "formica", "fortuna", "fulmine", "furgone", "gallina",
+"gettone", "gigante", "giovane", "giungla", "gradino", "granito", "incanto", "inverno",
+"lacrima", "lampada", "lavagna", "legname", "lucerna", "macello", "maestro", "malanno",
+"mangime", "materia", "matrice", "mattino", "mercato", "metallo", "mistero", "momento",
+"nascita", "nervoso", "notizia", "novella", "ottobre", "palazzo", "pallone", "parente",
+"passato", "passero", "pastore", "perdono", "pesante", "pettine", "piacere", "pianeta",
+"picchio", "pigiama", "pistola", "pittore", "ponente", "porcino", "portale", "portone",
+"presepe", "primato", "profumo", "pronome", "pulcino", "pulizia", "quercia", "ragazzo",
+"ragione", "regione", "respiro", "ricetta", "ricordo", "rimorso", "romanzo", "rondine",
+"sandalo", "scacchi", "scherzo", "schiuma", "sciarpa", "scoglio", "scontro", "segreto",
+"settore", "sfilata", "soldato", "sorella", "sorriso", "spettro", "tempera", "tenente",
+"tintura", "torrone", "turbine", "uccello", "vaccino", "valigia", "vallata", "vassoio",
+"verdura", "vetrina", "violino", "visione", "vitello", "volante", "vulcano", "zanzara",
+"alleato", "attacco", "bacheca", "bagagli", "bandito", "bottega", "brigata", "burrone",
+"calcolo", "cammino", "capanna", "cattura", "cerchio", "collana", "collina", "colombo",
+"comando", "confine", "costume", "decreto", "delitto", "dettato", "dialogo", "dipinto",
+"disegno", "dragone", "durante", "elmetto", "estremo", "farmaco", "femmina", "fessura",
+"fienile", "filmato", "finanza", "fischio", "fornaio", "fornace", "fossato", "gemello",
+"gennaio", "ghianda", "gondola", "immenso", "impegno", "indizio", "ingegno", "isolato",
+"lattuga", "leggero", "legione", "lettera", "lettore", "licenza", "maestra", "maniera",
+"massima", "melodia", "memoria", "mensola", "missile", "modella", "morbido", "oggetto",
+"padella", "pagella", "pantera", "patente", "pattino", "perdita", "persona", "piccolo",
+"pontile", "porcile", "portico", "pratica", "premura", "pretesa", "pugnale", "raffica",
+"recinto", "ribelle", "ricerca", "riforma", "rifugio", "ritorno", "rivista", "rosario",
+"rottura", "saliera", "salotto", "sbaglio", "scambio", "scatola", "scienza", "scivolo",
+"scomodo", "scrigno", "serrata", "signora", "signore", "sistema", "sonetto", "sopruso",
+"sospiro", "spirale", "strappo", "stretta", "sublime", "tamburo", "tendina", "terrore",
+"tessuto", "tribuna", "trionfo", "turista", "vacanza", "valanga", "velluto", "verbale",
+"vergine", "vescovo", "vestito", "vincolo", "visiera", "vittima", "zattera", "zoccolo",
+];
+
+// Dizionario per modalità: sol = parole che possono uscire, valide = parole accettate come tentativo.
+const MODALITA = [4, 5, 6, 7];
+const DIZIONARIO = {};
+MODALITA.forEach(n => {
+  const sol = [...new Set([...PAROLE, ...PAROLE_7].filter(p => p.length === n))];
+  const extra = EXTRA.filter(p => p.length === n);
+  DIZIONARIO[n] = { sol, valide: new Set([...sol, ...extra]) };
+});
