@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parola – il Wordle italiano</title>
+<meta name="description" content="Indovina la parola di 5 lettere in 6 tentativi. Ogni partita ha una parola diversa.">
+<meta name="theme-color" content="#0e1730">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='8' y='8' width='84' height='84' rx='18' fill='%232e9d62'/%3E%3Ctext x='50' y='70' font-size='62' font-family='Arial' font-weight='800' text-anchor='middle' fill='white'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#e8edf6; --panel:#ffffff; --ink:#14203f; --muted:#6a7694;
+  --line:#c9d2e4; --tile:#ffffff; --tile-edge:#cfd7e8;
+  --key:#d5ddee; --key-edge:#b4bfd8;
+  --correct:#2e9d62; --correct-edge:#1f7a49;
+  --present:#f0b82d; --present-edge:#c48f10; --present-ink:#2a1f00;
+  --absent:#6b7896; --absent-edge:#525e7a;
+  --shadow:0 18px 40px rgba(20,32,63,.18);
+}
+:root[data-theme=dark]{
+  --bg:#0e1730; --panel:#172245; --ink:#eef2fb; --muted:#97a3c4;
+  --line:#2d3b66; --tile:#162143; --tile-edge:#26335c;
+  --key:#2a3865; --key-edge:#1b2650;
+  --correct:#35a96c; --correct-edge:#237d4e;
+  --present:#e8b02a; --present-edge:#b08410;
+  --absent:#3b4770; --absent-edge:#2a3557;
+  --shadow:0 18px 40px rgba(0,0,0,.5);
+}
+:root[data-contrast=high]{
+  --correct:#ee7a2e; --correct-edge:#b95a1b;
+  --present:#6db4ee; --present-edge:#3f86be; --present-ink:#06202f;
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+  display:flex;flex-direction:column;align-items:center;min-height:100dvh;
+  overscroll-behavior:none;-webkit-tap-highlight-color:transparent;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+  transition:background .3s;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--present);outline-offset:2px}
+
+/* intestazione */
+header{width:100%;max-width:520px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 12px 12px;position:relative}
+header::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px;
+  background:linear-gradient(90deg,#2e9d62 0 33.3%,#f4f4f0 33.3% 66.6%,#d6403a 66.6% 100%);opacity:.9}
+h1{font-weight:800;font-size:clamp(26px,7vw,32px);letter-spacing:-.01em;line-height:1}
+.bar{display:flex;gap:2px}
+.bar.r{justify-content:flex-end}
+.ib{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:var(--ink);transition:background .15s}
+.ib:hover{background:var(--line)}
+.ib svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib.pulse{animation:pulse 1.4s ease-in-out 3}
+@keyframes pulse{50%{background:var(--correct);color:#fff}}
+
+main{flex:1;width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px 12px}
+
+/* tabellone */
+#board{display:grid;grid-template-rows:repeat(6,1fr);gap:7px;margin:auto 0;
+  width:min(92vw,340px,calc((100dvh - 310px) * 5 / 6))}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.tile{
+  aspect-ratio:1;display:grid;place-items:center;border-radius:11px;
+  background:var(--tile);border:2px solid var(--tile-edge);border-bottom-width:5px;
+  font-weight:800;font-size:clamp(24px,8vw,34px);line-height:1;text-transform:uppercase;user-select:none;
+}
+.tile.filled{border-color:var(--muted);animation:pop .12s ease-out}
+.tile.correct{background:var(--correct);border-color:var(--correct-edge);color:#fff}
+.tile.present{background:var(--present);border-color:var(--present-edge);color:var(--present-ink)}
+.tile.absent{background:var(--absent);border-color:var(--absent-edge);color:#fff}
+.tile.flip{animation:flip .56s ease both;animation-delay:calc(var(--i) * .28s)}
+.tile.win{animation:bounce .85s ease both;animation-delay:calc(var(--i) * .09s)}
+.row.shake{animation:shake .45s}
+@keyframes pop{50%{transform:scale(1.09)}}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes bounce{0%,20%{transform:translateY(0)}40%{transform:translateY(-16px)}60%{transform:translateY(4px)}80%{transform:translateY(-7px)}100%{transform:translateY(0)}}
+
+/* tastiera */
+#kb{width:100%;display:flex;flex-direction:column;gap:7px;padding:0 2px}
+.kr{display:flex;gap:5px;justify-content:center}
+.sp{flex:.5}
+.key{
+  flex:1;max-width:46px;height:56px;border-radius:9px;background:var(--key);color:var(--ink);
+  border-bottom:4px solid var(--key-edge);font-weight:800;font-size:clamp(14px,4vw,17px);text-transform:uppercase;
+  touch-action:manipulation;transition:background .25s,transform .06s,border-bottom-width .06s;
+}
+.key:active{transform:translateY(3px);border-bottom-width:1px}
+.key.wide{flex:1.55;max-width:70px;font-size:clamp(11px,3vw,13px)}
+.key.correct{background:var(--correct);border-bottom-color:var(--correct-edge);color:#fff}
+.key.present{background:var(--present);border-bottom-color:var(--present-edge);color:var(--present-ink)}
+.key.absent{background:var(--absent);border-bottom-color:var(--absent-edge);color:#fff;opacity:.8}
+.key svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* avvisi */
+#toasts{position:fixed;top:calc(env(safe-area-inset-top) + 78px);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;z-index:50;pointer-events:none}
+.toast{background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:600;font-size:15px;box-shadow:var(--shadow);animation:in .18s ease-out}
+.toast.out{opacity:0;transform:translateY(-6px);transition:.25s}
+@keyframes in{from{opacity:0;transform:translateY(-6px)}}
+
+/* finestre */
+dialog{border:0;border-radius:20px;background:var(--panel);color:var(--ink);padding:24px 22px 20px;width:min(92vw,420px);max-height:88dvh;overflow:auto;margin:auto;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(8,12,28,.55);backdrop-filter:blur(3px)}
+dialog[open]{animation:in .18s ease-out}
+dialog h2{font-size:24px;font-weight:800;margin-bottom:14px;letter-spacing:-.01em}
+dialog p{line-height:1.5;margin-bottom:10px;font-size:15.5px}
+dialog .x{position:absolute;top:10px;right:10px}
+.mini{display:flex;gap:5px;margin:6px 0 4px}
+.mini .tile{width:40px;height:40px;font-size:21px;border-bottom-width:4px;border-radius:9px}
+.hint{color:var(--muted);font-size:14px}
+.btns{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:13px 14px;border-radius:12px;font-weight:800;font-size:16px;background:var(--key);border-bottom:4px solid var(--key-edge);transition:transform .06s}
+.btn:active{transform:translateY(3px);border-bottom-width:1px}
+.btn.main{background:var(--correct);border-bottom-color:var(--correct-edge);color:#fff}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:18px}
+.stats b{display:block;font-size:30px;font-weight:800;line-height:1.1}
+.stats span{font-size:12.5px;color:var(--muted)}
+.dist{display:grid;grid-template-columns:14px 1fr;gap:5px 8px;align-items:center;font-weight:600;font-size:14px}
+.dist .b{background:var(--absent);color:#fff;border-radius:5px;padding:2px 8px;min-width:24px;text-align:right;font-size:13px}
+.dist .b.hl{background:var(--correct)}
+.reveal{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:var(--key);font-size:15px}
+.reveal b{font-size:20px;text-transform:uppercase;letter-spacing:.05em}
+
+.opt{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}
+.opt:last-of-type{border-bottom:0}
+.opt strong{display:block;font-size:16px}
+.opt small{display:block;color:var(--muted);font-size:13.5px;line-height:1.35;margin-top:2px}
+.sw{position:relative;flex:none;width:50px;height:30px}
+.sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:30px;background:var(--key-edge);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw input:checked+i{background:var(--correct)}
+.sw input:checked+i::after{transform:translateX(20px)}
+.sw input:focus-visible+i{outline:3px solid var(--present);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+@media (max-height:640px){.key{height:46px}#board{width:min(92vw,300px,calc((100dvh - 270px) * 5 / 6))}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <button class="ib" id="bHelp" aria-label="Come si gioca"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .9-1 1.6"/><circle cx="12" cy="16.9" r=".6"/></svg></button>
+    <button class="ib" id="bStats" aria-label="Statistiche"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></button>
+  </div>
+  <h1>Parola</h1>
+  <div class="bar r">
+    <button class="ib" id="bNew" aria-label="Nuova parola"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
+    <button class="ib" id="bSet" aria-label="Impostazioni"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <div id="board" aria-label="Tabellone di gioco"></div>
+  <div id="kb" aria-label="Tastiera"></div>
+</main>
+
+<div id="toasts" aria-live="polite"></div>
+
+<dialog id="dHelp">
+  <h2>Come si gioca</h2>
+  <p>Indovina la parola di 5 lettere in 6 tentativi. Dopo ogni tentativo le caselle cambiano colore.</p>
+  <div class="mini"><div class="tile correct">C</div><div class="tile">A</div><div class="tile">S</div><div class="tile">T</div><div class="tile">A</div></div>
+  <p><b>C</b> è nella parola, al posto giusto.</p>
+  <div class="mini"><div class="tile">T</div><div class="tile present">E</div><div class="tile">R</div><div class="tile">R</div><div class="tile">A</div></div>
+  <p><b>E</b> è nella parola, ma in un altro posto.</p>
+  <div class="mini"><div class="tile">V</div><div class="tile">I</div><div class="tile">N</div><div class="tile absent">O</div><div class="tile">!</div></div>
+  <p><b>O</b> non c’è nella parola.</p>
+  <p class="hint">Ogni partita ha una parola nuova, scelta a caso. Finché non le hai viste tutte, non si ripetono.</p>
+  <div class="btns"><button class="btn main" data-close>Gioca</button></div>
+</dialog>
+
+<dialog id="dStats">
+  <h2>Statistiche</h2>
+  <div id="statsBody"></div>
+</dialog>
+
+<dialog id="dSet">
+  <h2>Impostazioni</h2>
+  <label class="opt"><span><strong>Tema scuro</strong></span><span class="sw"><input type="checkbox" id="oDark"><i></i></span></label>
+  <label class="opt"><span><strong>Colori per daltonici</strong><small>Arancione e azzurro al posto di verde e giallo.</small></span><span class="sw"><input type="checkbox" id="oHigh"><i></i></span></label>
+  <label class="opt"><span><strong>Accetta qualsiasi combinazione</strong><small>Se spento, i tentativi devono essere parole del dizionario del gioco.</small></span><span class="sw"><input type="checkbox" id="oFree"><i></i></span></label>
+  <div class="btns"><button class="btn main" data-close>Fatto</button></div>
+</dialog>
+
+<script src="parole.js"></script>
+<script>
+(() => {
+  const COLS = 5, ROWS = 6;
+  const $ = s => document.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  let settings = Object.assign({ dark: null, high: false, free: true }, store.get('parola.settings', {}));
+  let stats = Object.assign({ played: 0, won: 0, streak: 0, max: 0, dist: [0, 0, 0, 0, 0, 0] }, store.get('parola.stats', {}));
+  let S = store.get('parola.state', null);
+  let busy = false;
+  const VALIDE = new Set([...PAROLE, ...EXTRA]);
+
+  /* ---------- impostazioni ---------- */
+  function applySettings() {
+    const dark = settings.dark === null ? matchMedia('(prefers-color-scheme: dark)').matches : settings.dark;
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.contrast = settings.high ? 'high' : '';
+    document.querySelector('meta[name=theme-color]').content = dark ? '#0e1730' : '#e8edf6';
+    $('#oDark').checked = dark; $('#oHigh').checked = settings.high; $('#oFree').checked = settings.free;
+  }
+  $('#oDark').onchange = e => { settings.dark = e.target.checked; store.set('parola.settings', settings); applySettings(); };
+  $('#oHigh').onchange = e => { settings.high = e.target.checked; store.set('parola.settings', settings); applySettings(); };
+  $('#oFree').onchange = e => { settings.free = e.target.checked; store.set('parola.settings', settings); };
+
+  /* ---------- costruzione interfaccia ---------- */
+  const board = $('#board');
+  for (let r = 0; r < ROWS; r++) {
+    const row = document.createElement('div'); row.className = 'row';
+    for (let c = 0; c < COLS; c++) { const t = document.createElement('div'); t.className = 'tile'; row.appendChild(t); }
+    board.appendChild(row);
+  }
+  const tile = (r, c) => board.children[r].children[c];
+
+  const LAYOUT = ['qwertyuiop', '·asdfghjkl·', 'E zxcvbnm B'];
+  const kb = $('#kb'); const keyEls = {};
+  const BACK_SVG = '<svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg>';
+  LAYOUT.forEach(line => {
+    const row = document.createElement('div'); row.className = 'kr';
+    [...line].forEach(ch => {
+      if (ch === '·') { const s = document.createElement('span'); s.className = 'sp'; row.appendChild(s); return; }
+      if (ch === ' ') return;
+      const b = document.createElement('button'); b.className = 'key';
+      if (ch === 'E') { b.classList.add('wide'); b.textContent = 'Invio'; b.dataset.k = 'ENTER'; b.setAttribute('aria-label', 'Invio'); }
+      else if (ch === 'B') { b.classList.add('wide'); b.innerHTML = BACK_SVG; b.dataset.k = 'BACK'; b.setAttribute('aria-label', 'Cancella'); }
+      else { b.textContent = ch; b.dataset.k = ch; keyEls[ch] = b; }
+      row.appendChild(b);
+    });
+    kb.appendChild(row);
+  });
+  kb.addEventListener('click', e => { const b = e.target.closest('.key'); if (b) press(b.dataset.k); });
+
+  /* ---------- logica ---------- */
+  function pickWord() {
+    let usate = store.get('parola.usate', []);
+    let pool = PAROLE.filter(w => !usate.includes(w));
+    if (!pool.length) { usate = []; pool = PAROLE.slice(); }
+    const w = pool[Math.floor(Math.random() * pool.length)];
+    usate.push(w); store.set('parola.usate', usate);
+    return w;
+  }
+  function evaluate(g, a) {
+    const res = Array(COLS).fill('absent'), left = {};
+    for (let i = 0; i < COLS; i++) { if (g[i] === a[i]) res[i] = 'correct'; else left[a[i]] = (left[a[i]] || 0) + 1; }
+    for (let i = 0; i < COLS; i++) { if (res[i] !== 'correct' && left[g[i]] > 0) { res[i] = 'present'; left[g[i]]--; } }
+    return res;
+  }
+  const save = () => store.set('parola.state', S);
+
+  function paintRow(r, letters) {
+    for (let c = 0; c < COLS; c++) {
+      const t = tile(r, c), ch = letters[c] || '';
+      const had = t.classList.contains('filled');
+      t.textContent = ch;
+      t.classList.toggle('filled', !!ch);
+      if (ch && had) { t.style.animation = 'none'; void t.offsetWidth; t.style.animation = ''; }
+    }
+  }
+  function clearBoard() {
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const t = tile(r, c); t.className = 'tile'; t.textContent = ''; t.style.removeProperty('--i'); }
+    Object.values(keyEls).forEach(k => k.className = 'key');
+    $('#bNew').classList.remove('pulse');
+  }
+  const RANK = { absent: 1, present: 2, correct: 3 };
+  function updateKeys() {
+    const best = {};
+    S.guesses.forEach(g => evaluate(g, S.answer).forEach((s, i) => { if (!best[g[i]] || RANK[s] > RANK[best[g[i]]]) best[g[i]] = s; }));
+    for (const [ch, s] of Object.entries(best)) if (keyEls[ch]) keyEls[ch].className = 'key ' + s;
+  }
+
+  function newGame() {
+    S = { answer: pickWord(), guesses: [], cur: '', over: false, won: false };
+    save(); clearBoard(); busy = false;
+  }
+  function restore() {
+    clearBoard();
+    S.guesses.forEach((g, r) => { const res = evaluate(g, S.answer); for (let c = 0; c < COLS; c++) { const t = tile(r, c); t.textContent = g[c]; t.classList.add(res[c]); } });
+    if (!S.over) paintRow(S.guesses.length, S.cur);
+    updateKeys();
+    if (S.over) { $('#bNew').classList.add('pulse'); if (!S.won) toast('La parola era ' + S.answer.toUpperCase(), 3500); }
+  }
+
+  function press(k) {
+    if (!S || S.over || busy || document.querySelector('dialog[open]')) return;
+    const r = S.guesses.length;
+    if (k === 'ENTER') return submit();
+    if (k === 'BACK') { S.cur = S.cur.slice(0, -1); }
+    else if (/^[a-z]$/.test(k) && S.cur.length < COLS) { S.cur += k; }
+    else return;
+    paintRow(r, S.cur); save();
+  }
+
+  function submit() {
+    const r = S.guesses.length, g = S.cur;
+    if (g.length < COLS) { shake(r); return toast('Servono 5 lettere'); }
+    if (!settings.free && !VALIDE.has(g)) { shake(r); return toast('Questa parola non è nel dizionario'); }
+    const res = evaluate(g, S.answer);
+    S.guesses.push(g); S.cur = '';
+    const won = g === S.answer, lost = !won && S.guesses.length === ROWS;
+    if (won || lost) { S.over = true; S.won = won; recordStats(won, S.guesses.length); }
+    save(); busy = true;
+    reveal(r, res, () => {
+      updateKeys(); busy = false;
+      if (won) {
+        const msgs = ['Geniale!', 'Magnifico!', 'Ottimo!', 'Bravo!', 'Ci sei arrivato!', 'Per un pelo!'];
+        toast(msgs[S.guesses.length - 1], 2200);
+        for (let c = 0; c < COLS; c++) { const t = tile(r, c); t.classList.remove('flip'); t.style.setProperty('--i', c); t.classList.add('win'); }
+      } else if (lost) toast('La parola era ' + S.answer.toUpperCase(), 4000);
+      if (S.over) { $('#bNew').classList.add('pulse'); setTimeout(openStats, won ? 1800 : 1500); }
+    });
+  }
+  function reveal(r, res, done) {
+    for (let c = 0; c < COLS; c++) {
+      const t = tile(r, c);
+      t.style.setProperty('--i', c); t.classList.add('flip');
+      setTimeout(() => t.classList.add(res[c]), c * 280 + 280);
+    }
+    setTimeout(done, COLS * 280 + 320);
+  }
+  function shake(r) { const row = board.children[r]; row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake'); }
+
+  function toast(msg, ms = 1500) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    $('#toasts').prepend(t);
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 260); }, ms);
+  }
+
+  /* ---------- statistiche ---------- */
+  function recordStats(won, n) {
+    stats.played++;
+    if (won) { stats.won++; stats.streak++; stats.max = Math.max(stats.max, stats.streak); stats.dist[n - 1]++; }
+    else stats.streak = 0;
+    store.set('parola.stats', stats);
+  }
+  function shareText() {
+    const sym = { correct: settings.high ? '🟧' : '🟩', present: settings.high ? '🟦' : '🟨', absent: '⬛' };
+    const lines = S.guesses.map(g => evaluate(g, S.answer).map(s => sym[s]).join(''));
+    return `Parola ${S.won ? S.guesses.length : 'X'}/${ROWS}\n\n${lines.join('\n')}\n\n${location.href.split('#')[0]}`;
+  }
+  function openStats() {
+    const pct = stats.played ? Math.round(stats.won / stats.played * 100) : 0;
+    const maxd = Math.max(1, ...stats.dist);
+    const hl = S && S.over && S.won ? S.guesses.length - 1 : -1;
+    let h = `<div class="stats"><div><b>${stats.played}</b><span>Giocate</span></div><div><b>${pct}</b><span>% vinte</span></div><div><b>${stats.streak}</b><span>Serie</span></div><div><b>${stats.max}</b><span>Record</span></div></div>`;
+    if (S && S.over && !S.won) h += `<div class="reveal">La parola era <b>${S.answer}</b></div>`;
+    h += '<div class="dist">' + stats.dist.map((n, i) => `<span>${i + 1}</span><div><div class="b ${i === hl ? 'hl' : ''}" style="width:${Math.max(8, n / maxd * 100)}%">${n}</div></div>`).join('') + '</div>';
+    h += '<div class="btns">';
+    if (S && S.over) h += '<button class="btn" id="bShare">Condividi</button><button class="btn main" id="bAgain">Nuova parola</button>';
+    else h += '<button class="btn main" data-close>Chiudi</button>';
+    h += '</div>';
+    $('#statsBody').innerHTML = h;
+    const sh = $('#bShare'), ag = $('#bAgain');
+    if (sh) sh.onclick = async () => {
+      const text = shareText();
+      try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
+      try { await navigator.clipboard.writeText(text); toast('Risultato copiato'); } catch (e) { toast('Impossibile copiare'); }
+    };
+    if (ag) ag.onclick = () => { $('#dStats').close(); startNew(); };
+    if (!$('#dStats').open) $('#dStats').showModal();
+  }
+  function startNew() {
+    if (S && !S.over && S.guesses.length && !confirm('Abbandonare la partita in corso?')) return;
+    newGame();
+  }
+
+  /* ---------- eventi ---------- */
+  $('#bHelp').onclick = () => $('#dHelp').showModal();
+  $('#bStats').onclick = openStats;
+  $('#bSet').onclick = () => $('#dSet').showModal();
+  $('#bNew').onclick = startNew;
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) e.target.closest('dialog').close();
+    if (e.target.tagName === 'DIALOG') {
+      const b = e.target.getBoundingClientRect();
+      if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) e.target.close();
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Enter') { if (document.activeElement && document.activeElement.tagName === 'BUTTON' && !document.activeElement.classList.contains('key')) return; e.preventDefault(); press('ENTER'); }
+    else if (e.key === 'Backspace') press('BACK');
+    else if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
+  });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySettings);
+
+  /* ---------- avvio ---------- */
+  applySettings();
+  if (!S || !S.answer || !PAROLE.includes(S.answer) && !S.over) { newGame(); if (!store.get('parola.visto', false)) { store.set('parola.visto', true); $('#dHelp').showModal(); } }
+  else restore();
+})();
+</script>
+</body>
+</html>
