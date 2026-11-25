@@ -366,10 +366,29 @@ dialog .msub{margin:-8px 0 14px}
   }
 
   /* Apre una modalità: riprende la partita in corso, altrimenti ne inizia una nuova */
+  /* Legge il dizionario di parole.js in modo tollerante (accetta array o Set, chiavi sol/valide o simili) */
+  function getDict(n) {
+    let D = null;
+    try { D = (typeof DIZIONARIO !== 'undefined') ? DIZIONARIO : (window.DIZIONARIO || window.dizionario || window.PAROLE || null); } catch (e) {}
+    if (!D) return { err: 'Dizionario non trovato: controlla che parole.js sia nella stessa cartella e si chiami proprio così' };
+    let e = D[n] || D[String(n)];
+    if (!e && Array.isArray(D)) e = D.filter(w => typeof w === 'string' && w.length === n);
+    if (!e) return { err: 'Nel dizionario mancano le parole da ' + n + ' lettere' };
+    const toArr = x => x ? Array.from(x) : [];
+    const norm = list => toArr(list).map(w => String(w).trim().toLowerCase()).filter(w => w.length === n && /^[a-z]+$/.test(w));
+    const sol = norm(Array.isArray(e) || e instanceof Set ? e : (e.sol || e.soluzioni || e.solutions || e.answers));
+    if (!sol.length) return { err: 'Nessuna parola da ' + n + ' lettere trovata in parole.js' };
+    const valide = new Set(norm(e.valide || e.valid || e.words || []));
+    sol.forEach(w => valide.add(w));
+    return { sol, valide };
+  }
+
   function startMode(n) {
+    const d = getDict(n);
+    if (d.err) { console.error('[Sburdle] ' + d.err); toast(d.err, 5000); return false; }
     gen++;
     COLS = n;
-    SOL = DIZIONARIO[n].sol; VALIDE = DIZIONARIO[n].valide;
+    SOL = d.sol; VALIDE = d.valide;
     stats = loadStats(n);
     S = store.get('parola.state.' + n, null);
     busy = false;
@@ -380,7 +399,7 @@ dialog .msub{margin:-8px 0 14px}
     if (riprendi) restore(); else newGame();
   }
   function openMode(n) {
-    startMode(n);
+    if (startMode(n) === false) return;
     try { history.pushState({ g: 1 }, ''); } catch (e) {}
   }
   function goMenu() {
